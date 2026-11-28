@@ -1075,9 +1075,9 @@ def _pi_frontmatter(fm_yaml: str, *, reject_duplicate_keys: bool = False):
 
     try:
         events = list(yaml.parse(fm_yaml))
-    except (yaml.YAMLError, RecursionError, ValueError):
-        # ValueError: PyYAML's scanner raises on an escape outside Unicode (``"\U00110000"``), which is
-        # unparseable frontmatter like any other syntax error.
+    except (yaml.YAMLError, RecursionError, ValueError, OverflowError):
+        # ValueError, or OverflowError on Python 3.12: PyYAML's scanner raises on an escape outside Unicode
+        # (``"\U00110000"``, ``"\UFFFFFFFF"``), which is unparseable frontmatter like any other syntax error.
         return None
     anchors: dict[str, tuple] = {}
 

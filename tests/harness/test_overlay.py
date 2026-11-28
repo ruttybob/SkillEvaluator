@@ -1940,6 +1940,17 @@ def test_frontmatter_nested_past_the_composer_recursion_limit_does_not_abort_the
     assert skill_facts(skill)["frontmatter_duplicate_keys"] is False
 
 
+def test_pi_frontmatter_survives_a_native_scanner_overflow(monkeypatch):
+    # PyYAML's scanner raises OverflowError on Python 3.12 for a code point above a C int
+    # (``"\UFFFFFFFF"``), where newer versions raise ValueError; both are unparseable frontmatter.
+    def overflow(*_args, **_kwargs):
+        raise OverflowError("Python int too large to convert to C int")
+
+    monkeypatch.setattr(overlay.yaml, "parse", overflow)
+
+    assert overlay._pi_frontmatter("description: x\n") is None
+
+
 def test_over_limit_frontmatter_is_not_reported_as_tab_indentation():
     # A tab inside a block scalar is valid YAML; the graph around it is over the parser limits.
     frontmatter = "name: demo\n" + "\n".join(alias_graph_lines(5)) + "\ntext: |\n  one\n  \ttwo\n"
